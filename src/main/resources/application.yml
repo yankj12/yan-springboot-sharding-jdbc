@@ -1,0 +1,37 @@
+
+server:
+  port: 8002
+# 配置Sharding-JDBC的分片策略
+spring:
+  shardingsphere:
+    datasource:
+      names: g1    # 数据源名称，多数据源以逗号分隔
+      # 由于上面配置数据源只有g1因此下面只配置g1.type,g1.driver-class-name,g1.url,g1.username,g1.password
+      g1:
+        type: com.alibaba.druid.pool.DruidDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://192.168.19.129:3306/goods_db?characterEncoding=utf-8&useUnicode=true&useSSL=false&serverTimezone=UTC
+        username: root
+        password: 123456
+    sharding:
+      tables:
+        goods:
+          actual-data-nodes: g1.goods_$->{1..2}    # 配置表的分布，表的策略
+          key-generator:
+            column: gid    # 指定goods表 主键gid 生成策略为 SNOWFLAKE
+            type: SNOWFLAKE
+          table-strategy:
+            inline:
+              sharding-column: gid    # 指定分片策略 约定gid值是偶数添加到goods_1表，如果gid是奇数添加到goods_2表
+              algorithm-expression: goods_$->{gid % 2 + 1}
+    props:
+      sql:
+        show: true    # 打开sql输出日志
+
+        # mybatis
+mybatis:
+
+mybatis-plus:
+  # Mapper.xml 文件位置 Maven 多模块项目的扫描路径需以 classpath*: 开头
+  mapperLocations: classpath:mapper/*.xml
+  
